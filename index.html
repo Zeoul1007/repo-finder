@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Repo Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #10131a;
+    --bg-raised: #161a23;
+    --line: #262c3a;
+    --text: #e9e8e2;
+    --text-dim: #8d93a3;
+    --amber: #e3a53d;
+    --amber-dim: #7a6337;
+    --green: #7fb069;
+    --red: #d9705f;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+
+  .wrap { max-width: 880px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .logo span { color: var(--amber); }
+  .tagline {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin: 0 0 36px;
+    max-width: 60ch;
+  }
+
+  nav.tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 28px;
+  }
+  nav.tabs button {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    padding: 10px 4px;
+    margin-right: 24px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transform: translateY(1px);
+  }
+  nav.tabs button.active { color: var(--text); border-bottom-color: var(--amber); }
+
+  .searchrow {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  input[type=text], input[type=number], select {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    border-radius: 4px;
+  }
+  input[type=text] { flex: 1; min-width: 220px; }
+  input[type=text]:focus, input[type=number]:focus, select:focus {
+    outline: none;
+    border-color: var(--amber-dim);
+  }
+  .filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .filters label {
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .filters input[type=number] { width: 90px; }
+
+  button.go {
+    background: var(--amber);
+    border: none;
+    color: #14110a;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button.go:hover { background: #edb659; }
+  button.go:disabled { background: var(--amber-dim); cursor: default; }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    margin: 24px 0 4px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .repo {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+  }
+  .repo:first-child { padding-top: 0; }
+  .repo-main { min-width: 0; }
+  .repo-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .repo-name:hover { color: var(--amber); }
+  .repo-name .owner { color: var(--text-dim); font-weight: 400; }
+  .repo-desc {
+    color: #c2c5ce;
+    font-size: 13.5px;
+    margin: 6px 0 10px;
+    line-height: 1.5;
+    max-width: 62ch;
+  }
+  .repo-tags {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--text-dim);
+    align-items: center;
+  }
+  .dot-lang { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; position: relative; top: -1px; }
+  .topic {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+  }
+  .repo-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .stars {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--green);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  button.save {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button.save:hover { border-color: var(--amber-dim); color: var(--amber); }
+  button.save.saved { border-color: var(--green); color: var(--green); }
+  button.save.remove:hover { border-color: var(--red); color: var(--red); }
+
+  .empty, .status {
+    color: var(--text-dim);
+    font-size: 13.5px;
+    padding: 40px 0;
+    text-align: center;
+  }
+  .status.err { color: var(--red); }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    color: var(--text-dim);
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  footer a { color: var(--amber); text-decoration: none; }
+
+  @media (max-width: 560px) {
+    .repo { flex-direction: column; }
+    .repo-side { flex-direction: row; align-items: center; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="logo">repo<span>/</span>finder</div>
+  </header>
+  <p class="tagline">Search GitHub's open-source repos by keyword, language, and stars. Save the ones worth reusing.</p>
+
+  <nav class="tabs">
+    <button class="active" data-tab="search">search</button>
+    <button data-tab="saved">saved (<span id="saved-count">0</span>)</button>
+  </nav>
+
+  <section id="tab-search">
+    <div class="searchrow">
+      <input type="text" id="q" placeholder="keyword, e.g. supabase auth, react admin panel, pdf parser…" />
+      <button class="go" id="go">Search</button>
+    </div>
+    <div class="filters">
+      <label>Language
+        <select id="lang">
+          <option value="">Any</option>
+          <option>JavaScript</option>
+          <option>TypeScript</option>
+          <option>Python</option>
+          <option>Go</option>
+          <option>Rust</option>
+          <option>Java</option>
+          <option>PHP</option>
+          <option>Ruby</option>
+          <option>C#</option>
+          <option>Swift</option>
+          <option>HTML</option>
+          <option>CSS</option>
+        </select>
+      </label>
+      <label>Min stars
+        <input type="number" id="minstars" placeholder="0" min="0" step="50" />
+      </label>
+      <label>Sort
+        <select id="sort">
+          <option value="stars">Most stars</option>
+          <option value="updated">Recently updated</option>
+          <option value="best-match">Best match</option>
+        </select>
+      </label>
+      <label>License
+        <select id="license">
+          <option value="">Any</option>
+          <option value="mit">MIT</option>
+          <option value="apache-2.0">Apache 2.0</option>
+          <option value="gpl-3.0">GPL 3.0</option>
+          <option value="bsd-3-clause">BSD 3-Clause</option>
+        </select>
+      </label>
+    </div>
+    <div class="meta-row" id="meta-row" style="display:none;">
+      <span id="result-count"></span>
+      <span id="rate-note"></span>
+    </div>
+    <div id="results"></div>
+  </section>
+
+  <section id="tab-saved" style="display:none;">
+    <div id="saved-results"></div>
+  </section>
+
+  <footer>
+    data via GitHub Search API &middot; personal use, no auth required &middot; saved repos stored in <a href="https://supabase.com" target="_blank">Supabase</a>
+  </footer>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://mafwpoqhozxvxmjdfoco.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZndwb3Fob3p4dnhtamRmb2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNzAwMDMsImV4cCI6MjEwNDY0NjAwM30.ywYZBpeIZvhTIq_REcKvY8uhSuZnrOdAnSMAKQrOoWQ";
+
+const LANG_COLORS = {
+  JavaScript: "#f1e05a", TypeScript: "#3178c6", Python: "#3572A5", Go: "#00ADD8",
+  Rust: "#dea584", Java: "#b07219", PHP: "#4F5D95", Ruby: "#701516",
+  "C#": "#178600", Swift: "#F05138", HTML: "#e34c26", CSS: "#563d7c"
+};
+
+const $ = (sel) => document.querySelector(sel);
+const resultsEl = $("#results");
+const savedResultsEl = $("#saved-results");
+const savedIds = new Set();
+
+// ---------- tabs ----------
+document.querySelectorAll("nav.tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav.tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab = btn.dataset.tab;
+    $("#tab-search").style.display = tab === "search" ? "" : "none";
+    $("#tab-saved").style.display = tab === "saved" ? "" : "none";
+    if (tab === "saved") loadSaved();
+  });
+});
+
+// ---------- github search ----------
+async function search() {
+  const q = $("#q").value.trim();
+  const lang = $("#lang").value;
+  const minStars = $("#minstars").value;
+  const sort = $("#sort").value;
+  const license = $("#license").value;
+
+  const goBtn = $("#go");
+  goBtn.disabled = true;
+  goBtn.textContent = "Searching…";
+  $("#meta-row").style.display = "none";
+  resultsEl.innerHTML = `<div class="status">Searching GitHub…</div>`;
+
+  let query = q || "stars:>1000";
+  if (lang) query += ` language:${lang}`;
+  if (minStars) query += ` stars:>=${minStars}`;
+  if (license) query += ` license:${license}`;
+
+  const params = new URLSearchParams({
+    q: query,
+    per_page: "30"
+  });
+  if (sort !== "best-match") params.set("sort", sort);
+  params.set("order", "desc");
+
+  try {
+    const res = await fetch(`https://api.github.com/search/repositories?${params}`, {
+      headers: { Accept: "application/vnd.github+json" }
+    });
+    const remaining = res.headers.get("x-ratelimit-remaining");
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.message || `GitHub API error (${res.status})`);
+    }
+    const data = await res.json();
+    renderResults(data.items || []);
+    $("#meta-row").style.display = "flex";
+    $("#result-count").textContent = `${data.total_count.toLocaleString()} repos matched · showing top ${data.items.length}`;
+    $("#rate-note").textContent = remaining !== null ? `${remaining} searches left this window` : "";
+  } catch (err) {
+    resultsEl.innerHTML = `<div class="status err">${err.message}. GitHub allows 10 unauthenticated searches/min — wait a moment and try again.</div>`;
+  } finally {
+    goBtn.disabled = false;
+    goBtn.textContent = "Search";
+  }
+}
+
+function repoCard(repo, { saved } = { saved: false }) {
+  const langColor = LANG_COLORS[repo.language] || "#666";
+  const topics = (repo.topics || []).slice(0, 4)
+    .map(t => `<span class="topic">${escapeHtml(t)}</span>`).join("");
+  const langDot = repo.language
+    ? `<span><span class="dot-lang" style="background:${langColor}"></span>${escapeHtml(repo.language)}</span>` : "";
+  const license = repo.license ? `<span>${escapeHtml(repo.license.name)}</span>` : "";
+  const updated = repo.updated_at ? `<span>updated ${timeAgo(repo.updated_at)}</span>` : "";
+
+  const el = document.createElement("div");
+  el.className = "repo";
+  el.innerHTML = `
+    <div class="repo-main">
+      <a class="repo-name" href="${repo.html_url}" target="_blank" rel="noopener">
+        <span class="owner">${escapeHtml(repo.owner.login)}/</span>${escapeHtml(repo.name)}
+      </a>
+      <div class="repo-desc">${escapeHtml(repo.description || "No description provided.")}</div>
+      <div class="repo-tags">${langDot}${license}${updated}${topics}</div>
+    </div>
+    <div class="repo-side">
+      <div class="stars">★ ${repo.stargazers_count.toLocaleString()}</div>
+      <button class="save ${saved ? "saved remove" : ""}" data-id="${repo.id}">
+        ${saved ? "Remove" : "Save"}
+      </button>
+    </div>
+  `;
+  el.querySelector("button.save").addEventListener("click", (e) => {
+    if (saved) removeSaved(repo.id, e.target);
+    else saveRepo(repo, e.target);
+  });
+  return el;
+}
+
+function renderResults(items) {
+  resultsEl.innerHTML = "";
+  if (!items.length) {
+    resultsEl.innerHTML = `<div class="empty">No repos matched. Try a broader keyword or lower the star minimum.</div>`;
+    return;
+  }
+  items.forEach(repo => resultsEl.appendChild(repoCard(repo, { saved: savedIds.has(repo.id) })));
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+function timeAgo(iso) {
+  const days = Math.floor((Date.now() - new Date(iso)) / 86400000);
+  if (days < 1) return "today";
+  if (days < 30) return `${days}d ago`;
+  if (days < 365) return `${Math.floor(days/30)}mo ago`;
+  return `${Math.floor(days/365)}y ago`;
+}
+
+// ---------- supabase (saved repos) ----------
+const sb = {
+  headers: {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    "Content-Type": "application/json"
+  },
+  async list() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/saved_repos?select=*&order=created_at.desc`, { headers: this.headers });
+    if (!res.ok) throw new Error("Could not load saved repos");
+    return res.json();
+  },
+  async insert(row) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/saved_repos`, {
+      method: "POST",
+      headers: { ...this.headers, Prefer: "return=minimal" },
+      body: JSON.stringify(row)
+    });
+    if (!res.ok) throw new Error("Could not save repo");
+  },
+  async remove(repoId) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/saved_repos?repo_id=eq.${repoId}`, {
+      method: "DELETE",
+      headers: this.headers
+    });
+    if (!res.ok) throw new Error("Could not remove repo");
+  }
+};
+
+async function saveRepo(repo, btn) {
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+  try {
+    await sb.insert({
+      repo_id: repo.id,
+      full_name: repo.full_name,
+      html_url: repo.html_url,
+      description: repo.description,
+      language: repo.language,
+      stargazers_count: repo.stargazers_count,
+      topics: repo.topics || [],
+      license: repo.license ? repo.license.name : null
+    });
+    savedIds.add(repo.id);
+    btn.textContent = "Remove";
+    btn.classList.add("saved", "remove");
+    updateSavedCount();
+  } catch (err) {
+    btn.textContent = "Save";
+    alert(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function removeSaved(repoId, btn) {
+  btn.disabled = true;
+  btn.textContent = "…";
+  try {
+    await sb.remove(repoId);
+    savedIds.delete(repoId);
+    if ($("#tab-saved").style.display !== "none") {
+      loadSaved();
+    } else {
+      btn.textContent = "Save";
+      btn.classList.remove("saved", "remove");
+      btn.disabled = false;
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = "Remove";
+    alert(err.message);
+  }
+}
+
+async function loadSaved() {
+  savedResultsEl.innerHTML = `<div class="status">Loading saved repos…</div>`;
+  try {
+    const rows = await sb.list();
+    savedIds.clear();
+    rows.forEach(r => savedIds.add(r.repo_id));
+    updateSavedCount();
+    savedResultsEl.innerHTML = "";
+    if (!rows.length) {
+      savedResultsEl.innerHTML = `<div class="empty">Nothing saved yet. Search for repos and hit Save on the ones worth keeping.</div>`;
+      return;
+    }
+    rows.forEach(r => {
+      const fakeRepo = {
+        id: r.repo_id,
+        full_name: r.full_name,
+        name: r.full_name.split("/").slice(1).join("/"),
+        owner: { login: r.full_name.split("/")[0] },
+        html_url: r.html_url,
+        description: r.description,
+        language: r.language,
+        stargazers_count: r.stargazers_count || 0,
+        topics: r.topics || [],
+        license: r.license ? { name: r.license } : null,
+        updated_at: null
+      };
+      savedResultsEl.appendChild(repoCard(fakeRepo, { saved: true }));
+    });
+  } catch (err) {
+    savedResultsEl.innerHTML = `<div class="status err">${err.message}</div>`;
+  }
+}
+
+function updateSavedCount() {
+  $("#saved-count").textContent = savedIds.size;
+}
+
+// ---------- init ----------
+$("#go").addEventListener("click", search);
+$("#q").addEventListener("keydown", e => { if (e.key === "Enter") search(); });
+sb.list().then(rows => { rows.forEach(r => savedIds.add(r.repo_id)); updateSavedCount(); }).catch(() => {});
+search();
+</script>
+</body>
+</html>
